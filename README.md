@@ -1,2 +1,1 @@
-# darts-coding
-DARTS Coding Session
+# DARTS Coding Session
