@@ -72,7 +72,7 @@ class RoomsEnv(gym.Env):
         self.time += 1
         self.state_history.append(self.state())
         x,y = self.agent_position
-        reward = -0.01
+        reward = 0
         if action == MOVE_NORTH and y+1 < self.height:
             self.set_position_if_no_obstacle((x, y+1))
         elif action == MOVE_SOUTH and y-1 >= 0:
@@ -86,7 +86,7 @@ class RoomsEnv(gym.Env):
             reward = 1
         self.undiscounted_return += reward
         done = goal_reached or self.time >= self.time_limit
-        return self.state(), reward, done, {}
+        return self.agent_position, reward, done, {}
         
     def set_position_if_no_obstacle(self, new_position):
         if new_position not in self.obstacles:
@@ -96,20 +96,7 @@ class RoomsEnv(gym.Env):
         self.agent_position = (1,1)
         self.time = 0
         self.state_history.clear()
-        return self.state()
-        
-    def embed_macro_action(self, state, macro_action):
-        model_copy = copy.deepcopy(self)
-        positions = []
-        done = False
-        for action in macro_action:
-            if not done:
-                _, _, done, _ = model_copy.step(action)
-                positions.append(model_copy.agent_position)
-        for position in positions:
-            x,y = position
-            state[y][x][AGENT_CHANNEL] = max(0.5, state[y][x][AGENT_CHANNEL])
-        return state
+        return self.agent_position
         
     def state_summary(self, state):
         return {
@@ -155,6 +142,6 @@ def read_map_file(path):
     height += 1
     return width, height, obstacles
 
-def load_env(path, movie_filename, time_limit=100, stochastic=False):
+def load_env(path, movie_filename, time_limit=200, stochastic=False):
     width, height, obstacles = read_map_file(path)
     return RoomsEnv(width, height, obstacles, time_limit, stochastic, movie_filename)
