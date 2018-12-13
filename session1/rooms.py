@@ -30,6 +30,7 @@ class RoomsEnv(gym.Env):
         self.action_space = spaces.Discrete(len(ROOMS_ACTIONS))
         self.observation_space = spaces.Box(-numpy.inf, numpy.inf, shape=(NR_CHANNELS,width,height))
         self.agent_position = None
+        self.done = False
         self.goal_position = (width-2,height-2)
         self.obstacles = obstacles
         self.time_limit = time_limit
@@ -69,6 +70,8 @@ class RoomsEnv(gym.Env):
         return self.step_with_action(action)
         
     def step_with_action(self, action):
+        if self.done:
+            return self.agent_position, 0, self.done, {}
         self.time += 1
         self.state_history.append(self.state())
         x,y = self.agent_position
@@ -85,14 +88,15 @@ class RoomsEnv(gym.Env):
         if goal_reached:
             reward = 1
         self.undiscounted_return += reward
-        done = goal_reached or self.time >= self.time_limit
-        return self.agent_position, reward, done, {}
+        self.done = goal_reached or self.time >= self.time_limit
+        return self.agent_position, reward, self.done, {}
         
     def set_position_if_no_obstacle(self, new_position):
         if new_position not in self.obstacles:
             self.agent_position = new_position
 
     def reset(self):
+        self.done = False
         self.agent_position = (1,1)
         self.time = 0
         self.state_history.clear()
